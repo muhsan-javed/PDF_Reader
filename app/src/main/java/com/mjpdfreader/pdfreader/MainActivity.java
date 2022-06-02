@@ -2,14 +2,18 @@ package com.mjpdfreader.pdfreader;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -21,6 +25,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     ListView lv_pdf;
+
 
     public static ArrayList<File> fileList = new ArrayList<File>();
     PDFAdapter obj_adapter;
@@ -34,24 +39,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         lv_pdf = findViewById(R.id.listView_pdf);
+        lv_pdf.setAdapter(obj_adapter);
 
         dir = new File(Environment.getExternalStorageDirectory().toString());
 
         permission_fun();
 
-        lv_pdf.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        lv_pdf.setOnItemClickListener((parent, view, position, id) -> {
 
-                Intent intent = new Intent(getApplicationContext(),ViewPDFFiles.class);
-                intent.putExtra("position",position);
-                startActivity(intent);
+            Intent intent = new Intent(getApplicationContext(),ViewPDFFiles.class);
+            intent.putExtra("position",position);
+            startActivity(intent);
 
-            }
         });
 
 
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Are you sure you want to Exit")
+                .setNegativeButton("No",null)
+                .setPositiveButton("Yes", (dialog, which) -> finishAffinity()).show();
     }
 
     private void permission_fun() {
@@ -100,28 +111,26 @@ public class MainActivity extends AppCompatActivity {
 
         if (listFile!=null && listFile.length>0){
 
-            for (int i=0; i<listFile.length;i++){
+            for (File file : listFile) {
 
-                if (listFile[i].isDirectory()){
-                    getfile(listFile[i]);
-                }else {
+                if (file.isDirectory()) {
+                    getfile(file);
+                } else {
 
                     boolean boolean_pdf = false;
-                    if (listFile[i].getName().endsWith(".pdf")){
+                    if (file.getName().endsWith(".pdf")) {
 
-                        for (int j =0; j<fileList.size();j++){
+                        for (int j = 0; j < fileList.size(); j++) {
 
-                            if (fileList.get(j).getName().equals(listFile[i].getName())){
+                            if (fileList.get(j).getName().equals(file.getName())) {
                                 boolean_pdf = true;
-                            }else {
-
                             }
                         }
 
-                        if (boolean_pdf){
+                        if (boolean_pdf) {
                             boolean_pdf = false;
-                        }else {
-                            fileList.add(listFile[i]);
+                        } else {
+                            fileList.add(file);
                         }
 
                     }
@@ -135,4 +144,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_toolbar,menu);
+
+        MenuItem menuItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) menuItem.getActionView();
+        searchView.setQueryHint("Search");
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                obj_adapter.getFilter().filter(newText);
+                return true;
+            }
+        });
+
+        return super.onCreateOptionsMenu(menu);
+    }
 }

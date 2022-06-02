@@ -16,6 +16,8 @@ public class ViewPDFFiles extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_p_d_f_files);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         pdfView = findViewById(R.id.pdfView);
 
         position = getIntent().getIntExtra("position",-1);
@@ -23,6 +25,12 @@ public class ViewPDFFiles extends AppCompatActivity {
         displayPDF();
 
 
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 
     private void displayPDF() {
